@@ -9,6 +9,7 @@ export const analyzeResume = async (file: File, jobDescription: string): Promise
   const response = await apiClient.post<AnalysisResponse>('/resume/analyze', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
+      'authorization': ''
     },
   });
 

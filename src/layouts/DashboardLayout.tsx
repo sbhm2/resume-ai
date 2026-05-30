@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Loader2, Sun, Moon, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { navigation } from '@/routes/config';
-import { useTheme } from '@/components/theme-provider';
+import { useTheme } from '@/providers/theme-provider';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
@@ -24,7 +24,7 @@ export const DashboardLayout = () => {
         <div>
           <div className="flex items-center gap-3 px-2 mb-10">
             <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-            <span className="text-xl font-bold tracking-tight">Callynex</span>
+            <span className="text-xl font-bold tracking-tight">Resume AI</span>
           </div>
           
           <nav className="space-y-1.5">
