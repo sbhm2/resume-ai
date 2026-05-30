@@ -1,176 +1,120 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, FileText, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { FileUpload } from '@/components/analyzer/FileUpload';
+import { ATSScoreCard } from '@/components/analyzer/ATSScoreCard';
+import { KeywordBadges } from '@/components/analyzer/KeywordBadges';
+import { BulletPointCard } from '@/components/analyzer/BulletPointCard';
+import { CoverLetterCard } from '@/components/analyzer/CoverLetterCard';
+import { LoadingOverlay, ErrorState } from '@/components/analyzer/States';
+import { useAnalyzeResume } from '@/hooks/useAnalyzeResume';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { SuggestionsList } from '@/components/analyzer/SuggestionsList';
+import { InterviewAccordion } from '@/components/analyzer/InterviewAccordion';
 
-
-// Mock Data Structure
-const mockAnalysis = {
-  score: 84,
-  missingKeywords: ['Redux', 'AWS', 'GraphQL', 'Agile Methodology'],
-  improvedBullets: [
-    { original: "Worked on the backend API.", improved: "Architected scalable RESTful APIs using Node.js, improving response times by 40%." },
-    { original: "Fixed bugs in the frontend.", improved: "Resolved 50+ critical UI bugs in React, elevating User Satisfaction scores." }
-  ],
-  suggestions: [
-    "Quantify your impact in the 'Senior Developer' role (e.g., 'Increased performance by 30%').",
-    "Move 'Skills' section above 'Education' for better ATS parsing.",
-    "Action verbs are missing in 3 bullet points."
-  ]
-};
+interface JDForm {
+  jobDescription: string;
+}
 
 export const ResumeAnalyzer = () => {
-  const [file, setFile] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [results, setResults] = useState<{
-    score: number;
-    missingKeywords: string[];
-    improvedBullets: { original: string; improved: string; }[];
-    suggestions: string[];
-  } | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const { register, watch, handleSubmit, formState: { errors } } = useForm<JDForm>();
+  const { mutate, data, isPending, isError, error, reset } = useAnalyzeResume();
 
-  const handleAnalyze = () => {
-    setIsAnalyzing(true);
-    // Simulate AI API Call
-    setTimeout(() => {
-      setResults(mockAnalysis as {
-        score: number;
-        missingKeywords: string[];
-        improvedBullets: { original: string; improved: string; }[];
-        suggestions: string[];
-      });
-      setIsAnalyzing(false);
-    }, 2500);
+  const jdValue = watch('jobDescription', '');
+
+  const onSubmit = (formData: JDForm) => {
+    if (!file) return;
+    mutate({ file, jd: formData.jobDescription });
   };
 
+  const isFormValid = file !== null && jdValue.length >= 100;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-primary">Resume Analyzer</h1>
-        <p className="text-gray-500 mt-1">Compare your resume against a job description for ATS optimization.</p>
+        <h1 className="text-2xl font-bold tracking-tight">Resume Analyzer</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Tailor your resume instantly to beat the ATS and land interviews.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column: Inputs */}
-        <div className="space-y-6">
-          <Card className="p-6 border-dashed border-2 bg-gray-50 flex flex-col items-center justify-center text-center h-48 transition-colors hover:bg-gray-100 cursor-pointer">
-            <UploadCloud className="w-10 h-10 text-gray-400 mb-4" />
-            <p className="text-sm font-medium text-gray-900">Click to upload or drag and drop</p>
-            <p className="text-xs text-gray-500 mt-1">PDF or DOCX (max. 5MB)</p>
-          </Card>
+      {!data && !isPending && !isError && (
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <FileUpload file={file} onFileChange={setFile} />
+          </div>
 
-          <Card className="p-0">
-            <div className="p-4 border-b border-border bg-gray-50">
-              <h3 className="text-sm font-medium">Target Job Description</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium">Job Description</h3>
+              <span className={cn("text-xs", jdValue.length < 100 ? "text-destructive" : "text-muted-foreground")}>
+                {jdValue.length} / 100 chars
+              </span>
             </div>
-            <textarea 
-              className="w-full h-48 p-4 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-black/5"
-              placeholder="Paste the job description here..."
+            <textarea
+              {...register('jobDescription', { 
+                required: 'Job description is required',
+                minLength: { value: 100, message: 'Minimum 100 characters required for accurate analysis' }
+              })}
+              placeholder="Paste the target job description here..."
+              className={cn(
+                "w-full h-64 p-4 text-sm bg-background border rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/20",
+                errors.jobDescription ? "border-destructive focus:ring-destructive/20" : "border-border"
+              )}
             />
-          </Card>
+            {errors.jobDescription && (
+              <p className="text-sm text-destructive">{errors.jobDescription.message}</p>
+            )}
 
-          <Button 
-            className="w-full py-6 text-base" 
-            onClick={handleAnalyze}
-            disabled={isAnalyzing}
-          >
-            {isAnalyzing ? 'Analyzing Resume via AI...' : 'Analyze & Optimize Resume'}
-          </Button>
+            <Button 
+              type="submit" 
+              size="lg" 
+              className="w-full mt-4" 
+              disabled={!isFormValid || isPending}
+            >
+              Analyze & Optimize
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {isPending && <LoadingOverlay />}
+
+      {isError && (
+        <ErrorState message={error.message} onRetry={() => reset()} />
+      )}
+
+      {data?.success && (
+        <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center justify-between border-b pb-4">
+            <h2 className="text-xl font-bold">Analysis Results</h2>
+            <Button variant="outline" onClick={() => reset()}>Analyze New Job</Button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-1">
+              <ATSScoreCard score={data.data.atsScore} />
+            </div>
+            <div className="md:col-span-2 space-y-6">
+              <KeywordBadges title="Missing Keywords to Add" keywords={data.data.missingKeywords} />
+              <KeywordBadges title="Recommended Skills" keywords={data.data.recommendedSkills} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <SuggestionsList suggestions={data.data.resumeSuggestions} />
+              <BulletPointCard bullets={data.data.improvedBulletPoints} />
+              <InterviewAccordion questions={data.data.interviewQuestions} />
+            </div>
+            
+            <div>
+              <CoverLetterCard content={data.data.coverLetter} />
+            </div>
+          </div>
         </div>
-
-        {/* Right Column: Results / Loading State */}
-        <div className="h-full relative">
-          <AnimatePresence mode="wait">
-            {!isAnalyzing && !results && (
-              <motion.div 
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="h-full flex flex-col items-center justify-center text-gray-400 border border-dashed border-border rounded-xl"
-              >
-                <Sparkles className="w-12 h-12 mb-4 opacity-50" />
-                <p>Awaiting inputs for AI analysis</p>
-              </motion.div>
-            )}
-
-            {isAnalyzing && (
-              <motion.div 
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="h-full flex flex-col items-center justify-center bg-white rounded-xl shadow-saas border border-border"
-              >
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                  className="w-12 h-12 border-4 border-gray-100 border-t-primary rounded-full mb-4"
-                />
-                <p className="font-medium animate-pulse">Running ATS simulation...</p>
-              </motion.div>
-            )}
-
-            {results && !isAnalyzing && (
-              <motion.div 
-                key="results"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                {/* Score Card */}
-                <Card className="p-6 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">ATS Match Score</h3>
-                    <p className="text-sm text-gray-500">Based on industry parser logic</p>
-                  </div>
-                  <div className="relative w-20 h-20 flex items-center justify-center">
-                    {/* SVG Circle represents score */}
-                    <svg className="w-full h-full transform -rotate-90">
-                      <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-100" />
-                      <circle 
-                        cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" 
-                        strokeDasharray={`${(results.score / 100) * 226} 226`}
-                        className="text-primary transition-all duration-1000 ease-out" 
-                      />
-                    </svg>
-                    <span className="absolute text-xl font-bold">{results.score}%</span>
-                  </div>
-                </Card>
-
-                {/* Missing Keywords */}
-                <Card className="p-6">
-                  <h3 className="text-sm font-medium mb-4 flex items-center gap-2"><AlertCircle className="w-4 h-4 text-orange-500"/> Missing Keywords</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {results.missingKeywords.map(kw => (
-                      <span key={kw} className="px-3 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full border border-red-100">
-                        {kw}
-                      </span>
-                    ))}
-                  </div>
-                </Card>
-
-                {/* AI Improved Bullets */}
-                <Card className="p-6">
-                  <h3 className="text-sm font-medium mb-4 flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500"/> AI Bullet Enhancements</h3>
-                  <div className="space-y-4">
-                    {results.improvedBullets.map((bullet, idx) => (
-                      <div key={idx} className="text-sm p-4 bg-gray-50 rounded-lg border border-border">
-                        <p className="text-gray-500 line-through mb-2">{bullet.original}</p>
-                        <p className="font-medium text-primary flex items-start gap-2">
-                          <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5"/> 
-                          {bullet.improved}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

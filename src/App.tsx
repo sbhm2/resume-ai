@@ -1,29 +1,27 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { DashboardLayout } from './layouts/DashboardLayout';
-import { ResumeAnalyzer } from './pages/ResumeAnalyzer';
-import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
+import { AppRoutes } from '@/routes';
 
-// Placeholders for other pages
-const Placeholder = ({ title }: { title: string }) => <div className="text-xl font-semibold text-gray-400 mt-10">{title} Page Template</div>;
-export const App = () => {
+// 1. Create a client instance
+// You can configure global defaults here (like retry logic or cache time)
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // Prevents refetching when user switches browser tabs
+      retry: 1, // Only retry failed requests once
+    },
+  },
+});
+
+function App() {
   return (
-    <React.StrictMode>
+    // 2. Wrap your application with the provider
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          {/* Redirect root to dashboard for now */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          
-          {/* Main Application Layout */}
-          <Route element={<DashboardLayout />}>
-            <Route path="/dashboard" element={<Placeholder title="Dashboard" />} />
-            <Route path="/analyzer" element={<ResumeAnalyzer />} />
-            <Route path="/cover-letters" element={<Placeholder title="Cover Letters" />} />
-            <Route path="/interview" element={<Placeholder title="Interview Prep" />} />
-            <Route path="/applications" element={<Placeholder title="Application Tracker" />} />
-            <Route path="/settings" element={<Placeholder title="Settings" />} />
-          </Route>
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
-    </React.StrictMode>
+    </QueryClientProvider>
   );
-};
+}
+
+export default App;
