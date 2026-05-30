@@ -10,7 +10,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     const customError = {
-      message: error.response?.data?.message || 'An unexpected error occurred. Please try again.',
+      message: error.response?.data?.error || error.response?.data?.message || 'An unexpected error occurred. Please try again.',
       status: error.response?.status,
     };
     return Promise.reject(customError);

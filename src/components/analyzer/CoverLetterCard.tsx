@@ -23,7 +23,7 @@ export const CoverLetterCard = ({ content }: { content: string }) => {
   };
 
   return (
-    <div className="bg-surface border rounded-xl shadow-sm overflow-hidden flex flex-col h-[600px]">
+    <div className="bg-surface border rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[320px] max-h-[520px]">
       <div className="flex items-center justify-between p-4 border-b bg-accent/30">
         <h3 className="text-sm font-semibold">Generated Cover Letter</h3>
         <div className="flex gap-2">
@@ -38,7 +38,7 @@ export const CoverLetterCard = ({ content }: { content: string }) => {
       <textarea
         value={letter}
         onChange={(e) => setLetter(e.target.value)}
-        className="w-full h-full p-6 text-sm leading-relaxed resize-none focus:outline-none focus:ring-inset focus:ring-1 focus:ring-primary/20 bg-background"
+        className="min-h-0 flex-1 w-full p-6 text-sm leading-relaxed resize-none focus:outline-none focus:ring-inset focus:ring-1 focus:ring-primary/20 bg-background overflow-y-auto"
       />
     </div>
   );
