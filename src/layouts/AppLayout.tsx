@@ -1,8 +1,9 @@
-import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
+import { DashboardLayout } from '@/layouts/DashboardLayout';
+import { GuestDashboardLayout } from '@/layouts/GuestDashboardLayout';
 import { Loader2 } from 'lucide-react';
 
-export const GuestRoute = () => {
+export const AppLayout = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -13,5 +14,5 @@ export const GuestRoute = () => {
     );
   }
 
-  return !isAuthenticated ? <Outlet /> : <Navigate to="/dashboard" replace />;
+  return isAuthenticated ? <DashboardLayout /> : <GuestDashboardLayout />;
 };

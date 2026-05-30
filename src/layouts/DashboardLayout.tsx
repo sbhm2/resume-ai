@@ -1,11 +1,18 @@
 import { Suspense } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Loader2, Sun, Moon, Sparkles } from 'lucide-react';
+import { Loader2, Sun, Moon, Sparkles, LogOut } from 'lucide-react'; // Added LogOut
 import { cn } from '@/lib/utils';
 import { navigation } from '@/routes/config';
 import { useTheme } from '@/providers/theme-provider';
+import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator // Added Separator for cleaner UI
+} from "@/components/ui/dropdown-menu"
 
 const PageLoader = () => (
   <div className="flex h-full w-full items-center justify-center">
@@ -16,6 +23,20 @@ const PageLoader = () => (
 export const DashboardLayout = () => {
   const location = useLocation();
   const { setTheme } = useTheme();
+  const { user, logout } = useAuth(); // Extracted logout
+
+  const initials = user?.name
+    ? user.name
+        .split(' ')
+        .map((part) => part.charAt(0))
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : 'U';
+
+  const planLabel = user?.plan
+    ? `${user.plan.charAt(0).toUpperCase()}${user.plan.slice(1)} Plan`
+    : 'Free Plan';
 
   return (
     <div className="flex h-screen bg-background text-foreground transition-colors duration-300">
@@ -49,14 +70,38 @@ export const DashboardLayout = () => {
           </nav>
         </div>
 
-        {/* User Profile Snippet */}
-        <div className="flex items-center gap-3 px-3 py-3 border rounded-xl bg-card shadow-sm mt-8">
-          <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">RP</div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-semibold truncate">Rohit Patil</p>
-            <p className="text-xs text-muted-foreground truncate">Free Plan</p>
-          </div>
-        </div>
+        {/* User Profile Snippet (Now a Dropdown Menu) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="w-full focus:outline-none text-left">
+            <div className="flex items-center gap-3 px-3 py-3 border rounded-xl bg-card shadow-sm mt-8 transition-colors hover:bg-muted/50 cursor-pointer">
+              <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                {initials}
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <p className="text-sm font-semibold truncate">{user?.name ?? 'User'}</p>
+                <p className="text-xs text-muted-foreground truncate capitalize">{planLabel}</p>
+              </div>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top" className="w-56 mb-2">
+            <div className="flex flex-col space-y-1 p-2">
+              <p className="text-sm font-medium leading-none">{user?.name ?? 'User'}</p>
+              <p className="text-xs leading-none text-muted-foreground">{user?.email ?? 'user@example.com'}</p>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link to="/profile">Profile Settings</Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              onClick={logout} 
+              className="text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-900/10 dark:focus:text-red-400"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Main Content Area */}
@@ -99,7 +144,7 @@ export const DashboardLayout = () => {
   );
 };
 
-// Simple Badge component defined inline for the layout header (if not using Shadcn Badge here)
+// Simple Badge component defined inline for the layout header
 const Badge = ({ children, className, ...props }: any) => (
   <span className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2", className)} {...props}>{children}</span>
 );
