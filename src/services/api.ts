@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
 export const apiClient = axios.create({
-  baseURL: 'http://localhost:3000/api',
-  timeout: 90000, // 30 seconds timeout for AI processing
+  baseURL: API_BASE_URL,
+  timeout: 90000, // 90 seconds timeout for AI processing
 });
 
 // Request Interceptor: Attach Token from localStorage
