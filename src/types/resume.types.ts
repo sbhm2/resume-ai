@@ -10,8 +10,9 @@ export interface AnalysisResponseData {
   
   export interface AnalysisResponse {
     success: boolean;
-    requestId: string,
-    generatedAt: string,
+    analysisId?: string;
+    requestId?: string;
+    generatedAt?: string;
     data: AnalysisResponseData;
   }
   

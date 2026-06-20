@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AppRoutes } from '@/routes';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { Toaster } from '@/components/ui/sonner';
 
 const queryClient = new QueryClient();
 
@@ -14,6 +15,7 @@ function App() {
         <BrowserRouter>
 
           <AppRoutes />
+          <Toaster />
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>

@@ -5,24 +5,12 @@ import { Login } from '@/pages/auth/Login';
 import { Signup } from '@/pages/auth/Signup';
 import { GuestRoute } from './GuestRoutes';
 import { ProtectedRoute } from './ProtectedRoute';
-import { PremiumBlur } from '@/components/dashboard/PremiumBlur';
-import { DetailedAnalysisCard } from '@/components/dashboard/DetailedAnalysis';
-import { dummyAnalysisData } from '@/services/dummyData';
+import { DashboardPage } from '@/pages/DashboardPage';
+import { UnderConstruction } from '@/pages/UnderConstruction';
+import { ResumeEditorPage } from '@/pages/ResumeEditor';
 
 const ResumeAnalyzer = lazy(() =>
   import('@/pages/ResumeAnalyzer').then((module) => ({ default: module.ResumeAnalyzer }))
-);
-
-const Placeholder = ({ title }: { title: string }) => (
-  <div className="flex h-[50vh] items-center justify-center">
-    {/* <h2 className="text-xl font-semibold text-muted-foreground">{title} Page Template</h2> */}
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold tracking-tight">Recent Premium Insights</h2>
-      <PremiumBlur>
-        <DetailedAnalysisCard data={dummyAnalysisData} />
-      </PremiumBlur>
-    </div>
-  </div>
 );
 
 export const AppRoutes = () => {
@@ -38,15 +26,16 @@ export const AppRoutes = () => {
 
       {/* App shell: GuestDashboardLayout for guests, DashboardLayout for authenticated users */}
       <Route element={<AppLayout />}>
-        <Route path="/dashboard" element={<Placeholder title="Dashboard" />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
 
         {/* Authenticated-only routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/analyzer" element={<ResumeAnalyzer />} />
-          <Route path="/cover-letters" element={<Placeholder title="Cover Letters" />} />
-          <Route path="/interview" element={<Placeholder title="Interview Prep" />} />
-          <Route path="/applications" element={<Placeholder title="Applications" />} />
-          <Route path="/settings" element={<Placeholder title="Settings" />} />
+          <Route path="/cover-letters" element={<UnderConstruction />} />
+          <Route path="/interview" element={<UnderConstruction />} />
+          <Route path="/applications" element={<UnderConstruction />} />
+          <Route path="/settings" element={<UnderConstruction />} />
+          <Route path="/resume-editor/:analysisId" element={<ResumeEditorPage />} />
         </Route>
       </Route>
 

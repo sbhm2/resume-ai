@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Sparkles,
   ArrowRight,
@@ -6,6 +7,7 @@ import {
   AlertCircle,
   FileText,
   Lightbulb,
+  PenLine,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,6 +40,7 @@ export const ResumeAnalyzer = () => {
   const { mutate, data, isPending, isError, error, reset } = useAnalyzeResume();
 
   const analysis = data?.success ? data.data : null;
+  const analysisId = data?.analysisId ?? data?.requestId ?? 'demo';
   const canAnalyze = Boolean(file) && jd.trim().length >= MIN_JD_LENGTH;
 
   const handleAnalyze = () => {
@@ -207,6 +210,27 @@ export const ResumeAnalyzer = () => {
               </CardContent>
             </Card>
 
+            <Card className="border-indigo-200 bg-gradient-to-r from-indigo-50 to-white shadow-sm dark:border-indigo-800/50 dark:from-indigo-950/40 dark:to-slate-950">
+              <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold">Ready to improve your resume?</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Review AI suggestions, accept edits, and export an optimized PDF.
+                  </p>
+                </div>
+                <Button asChild className="shrink-0 bg-indigo-600 hover:bg-indigo-700 shadow-md">
+  <Link 
+    to={`/resume-editor/${analysisId}`}
+    state={{ analysisData: analysis }} // <-- Pass data through router state
+  >
+    <PenLine className="mr-2 h-4 w-4" />
+    Open Resume Editor
+    <ArrowRight className="ml-2 h-4 w-4" />
+  </Link>
+</Button>
+              </CardContent>
+            </Card>
+
             <Card className="min-h-0 min-w-0 border-border/50 bg-card shadow-sm">
               <Tabs defaultValue="overview" className="flex min-h-0 w-full flex-col">
                 <div className="shrink-0 overflow-x-auto border-b px-4 sm:px-6">
@@ -322,10 +346,20 @@ export const ResumeAnalyzer = () => {
               </Tabs>
             </Card>
 
-            <div className="flex justify-end">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={handleReset}>
                 Analyze New Job
               </Button>
+              <Button asChild className="shrink-0 bg-indigo-600 hover:bg-indigo-700 shadow-md">
+  <Link 
+    to={`/resume-editor/${analysisId}`}
+    state={{ analysisData: analysis }} // <-- Pass data through router state
+  >
+    <PenLine className="mr-2 h-4 w-4" />
+    Open Resume Editor
+    <ArrowRight className="ml-2 h-4 w-4" />
+  </Link>
+</Button>
             </div>
           </>
         )}
