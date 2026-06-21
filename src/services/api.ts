@@ -1,8 +1,11 @@
 import axios from 'axios';
+import { queryClient } from '@/lib/queryClient';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 export const apiClient = axios.create({
-  baseURL: 'http://localhost:3000/api',
-  timeout: 90000, // 30 seconds timeout for AI processing
+  baseURL: API_BASE_URL,
+  timeout: 90000, // 90 seconds timeout for AI processing
 });
 
 // Request Interceptor: Attach Token from localStorage
@@ -21,7 +24,7 @@ apiClient.interceptors.response.use(
     // If 401 Unauthorized, force logout
     if (error.response?.status === 401) {
       localStorage.removeItem('resume_ai_token');
-      // window.location.href = '/login';
+      queryClient.clear();
       return Promise.reject(error);
     }
 
