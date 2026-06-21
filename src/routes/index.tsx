@@ -9,6 +9,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { GuestDashboardPage } from '@/pages/GuestDashboardPage';
 import { UnderConstruction } from '@/pages/UnderConstruction';
 import { ResumeEditorPage } from '@/pages/ResumeEditor';
+import { CoverLettersPage } from '@/pages/CoverLettersPage';
 import { useAuth } from '@/providers/AuthProvider';
 
 const ResumeAnalyzer = lazy(() =>
@@ -33,7 +34,7 @@ export const AppRoutes = () => {
         {/* Authenticated-only routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/analyzer" element={<ResumeAnalyzer />} />
-          <Route path="/cover-letters" element={<UnderConstruction />} />
+          <Route path="/cover-letters" element={<CoverLettersPage />} />
           <Route path="/interview" element={<UnderConstruction />} />
           <Route path="/applications" element={<UnderConstruction />} />
           <Route path="/settings" element={<UnderConstruction />} />
