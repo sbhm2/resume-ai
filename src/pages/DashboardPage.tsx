@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { 
   FileText, TrendingUp, Activity, Calendar, ChevronRight, 
@@ -6,9 +5,8 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { apiClient } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/providers/AuthProvider';
+import { useDashboardQuery } from '@/hooks/useDashboardQuery';
 import dayjs from 'dayjs';
 
 interface RecentAnalysis {
@@ -28,22 +26,8 @@ interface DashboardData {
   recentAnalyses: RecentAnalysis[];
 }
 
-interface DashboardResponse {
-  success: boolean;
-  data: DashboardData;
-}
-
 export const DashboardPage = () => {
-  const { isAuthenticated } = useAuth();
-  const { data, isLoading } = useQuery({
-    queryKey: ['dashboard'],
-    queryFn: async () => {
-      const { data } = await apiClient.get<DashboardResponse>('/analysis/dashboard');
-      if (!data.success) throw new Error('Failed to fetch dashboard data');
-      return data.data;
-    },
-    enabled: isAuthenticated,
-  });
+  const { data, isLoading } = useDashboardQuery();
 
   if (isLoading) {
     return (

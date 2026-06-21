@@ -1,4 +1,4 @@
-import { useReducer, useEffect } from 'react';
+import { useReducer, useEffect, useRef } from 'react';
 import { EditorState, Suggestion, ResumeData } from '@/types/editor.types';
 import { toast } from 'sonner';
 import { editorService } from '@/services/editor.service';
@@ -257,13 +257,29 @@ export const useResumeEditor = (analysisId: string, initialData: { resume: Resum
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state.activeSuggestionId, state.history]);
 
+  // Track the last successfully saved resume for diff computation
+  const lastSavedResumeRef = useRef<ResumeData | null>(null);
+
+  // When INIT loads fresh data from server, set it as the baseline for diffs
+  useEffect(() => {
+    if (state.originalResume) {
+      lastSavedResumeRef.current = state.originalResume;
+    }
+  }, [state.originalResume]);
+
   // Auto-save logic (Debounced)
   useEffect(() => {
     if (!state.workingResume) return;
     const timeoutId = setTimeout(async () => {
       dispatch({ type: 'SET_SAVING', payload: true });
       try {
-        await editorService.saveDraft(analysisId, state.workingResume);
+        await editorService.saveDraft(
+          analysisId,
+          state.workingResume,
+          lastSavedResumeRef.current,
+        );
+        // Update the baseline for future diffs — computeHash happens inside saveDraft
+        lastSavedResumeRef.current = JSON.parse(JSON.stringify(state.workingResume));
         dispatch({ type: 'SET_LAST_SAVED', payload: new Date().toLocaleTimeString() });
       } catch (err) {
         console.error("Autosave failed", err);

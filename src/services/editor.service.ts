@@ -1,5 +1,6 @@
 import { apiClient } from './api';
 import { ResumeData, Suggestion } from '@/types/editor.types';
+import { computeDiff } from '@/utils/diff';
 
 function escapeHtml(text: string): string {
   const div = document.createElement('div');
@@ -33,8 +34,25 @@ export const editorService = {
     return data.data;
   },
   
-  saveDraft: async (analysisId: string, workingResume: ResumeData) => {
-    const { data } = await apiClient.put(`/analysis/editor-data/${analysisId}/draft`, { workingResume });
+  saveDraft: async (analysisId: string, workingResume: ResumeData, lastSavedResume: ResumeData | null) => {
+    // If no previous state, send full payload (first save)
+    if (!lastSavedResume) {
+      const { data } = await apiClient.put(`/analysis/editor-data/${analysisId}/draft`, {
+        mode: 'full',
+        workingResume,
+      });
+      return data;
+    }
+
+    // Compute diff — only send what changed
+    const diff = computeDiff(lastSavedResume, workingResume);
+    if (!diff) return { success: true, message: 'No changes to save' };
+
+    const { data } = await apiClient.put(`/analysis/editor-data/${analysisId}/draft`, {
+      mode: 'patch',
+      baseHash: diff.baseHash,
+      ops: diff.ops,
+    });
     return data;
   },
 
