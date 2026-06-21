@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { 
   Download, ArrowLeft, History, Eye, EyeOff, Loader2, CheckCircle2, 
@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 
 import { useResumeEditor } from '@/hooks/useResumeEditor';
 import { editorService } from '@/services/editor.service';
-import { ResumePreview } from '@/components/editor/ResumePreview';
+import { ResumePreview, HighlightTarget } from '@/components/editor/ResumePreview';
 import { SuggestionCard } from '@/components/editor/SuggestionCard';
 import { ResumeData, Suggestion } from '@/types/editor.types';
 
@@ -123,25 +123,41 @@ export const ResumeEditorPage = () => {
 
   const { state, dispatch } = useResumeEditor(analysisId || '', initialData);
 
-  // Scroll/highlight form section when user manually clicks a suggestion card
-  // (NOT on auto-advance after accept/reject)
-  const scrollToSectionForSuggestion = useCallback((suggestion: Suggestion) => {
-    let targetId = '';
-    if (suggestion.type === 'summary') targetId = 'section-summary';
-    else if (suggestion.type === 'bullet') targetId = 'section-experience';
-    else if (suggestion.type === 'skill' || suggestion.type === 'keyword') targetId = 'section-skills';
+  // Compute highlight target for the resume preview panel based on active suggestion
+  const highlightTarget: HighlightTarget | null = useMemo(() => {
+    if (!state.activeSuggestionId) return null;
+    const suggestion = state.suggestions.find(s => s.id === state.activeSuggestionId);
+    if (!suggestion || suggestion.status !== 'pending') return null;
 
-    if (!targetId) return;
-
-    const el = sectionRefs.current[targetId];
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.classList.add('ring-2', 'ring-indigo-400', 'rounded-lg', 'transition-all');
-      setTimeout(() => {
-        el.classList.remove('ring-2', 'ring-indigo-400', 'rounded-lg');
-      }, 2000);
+    switch (suggestion.type) {
+      case 'summary':
+        return { type: 'summary' };
+      case 'bullet':
+        return { type: 'experience', sectionId: suggestion.sectionId };
+      case 'skill':
+      case 'keyword':
+        return { type: 'skills' };
+      default:
+        return null;
     }
-  }, []);
+  }, [state.activeSuggestionId, state.suggestions]);
+
+  // Auto-scroll the resume preview panel to the highlighted section
+  useEffect(() => {
+    if (!highlightTarget) return;
+    const timer = setTimeout(() => {
+      let selector = `[data-section="${highlightTarget.type}"]`;
+      if (highlightTarget.sectionId) {
+        // For experience entries, target the specific entry by data-section-id
+        selector = `[data-section-id="${highlightTarget.sectionId}"]`;
+      }
+      const el = document.querySelector(selector);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [highlightTarget]);
 
   const handleExportPDF = () => {
     try {
@@ -481,7 +497,6 @@ export const ResumeEditorPage = () => {
                           onReject={(id) => dispatch({ type: 'REJECT_SUGGESTION', payload: id })}
                           onClick={() => {
                             dispatch({ type: 'SET_ACTIVE_SUGGESTION', payload: suggestion.id });
-                            scrollToSectionForSuggestion(suggestion);
                           }}
                         />
                       ))
@@ -497,7 +512,7 @@ export const ResumeEditorPage = () => {
         <div className="relative min-h-0 overflow-y-auto bg-slate-100 p-8 pb-32 dark:bg-slate-900/80 lg:col-span-7 xl:col-span-8 flex justify-center">
           {/* The Live Document */}
           <div className="w-full max-w-[800px]">
-            <ResumePreview state={state} />
+            <ResumePreview state={state} highlightTarget={highlightTarget} />
           </div>
         </div>
       </main>

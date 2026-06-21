@@ -34,25 +34,33 @@ export const editorService = {
     return data.data;
   },
   
-  saveDraft: async (analysisId: string, workingResume: ResumeData, lastSavedResume: ResumeData | null) => {
+  saveDraft: async (analysisId: string, workingResume: ResumeData, lastSavedResume: ResumeData | null, suggestionStatuses?: Record<string, string>) => {
+    // Build suggestion statuses map: { suggestionId: status }
+    const statusesPayload = suggestionStatuses || undefined;
+
     // If no previous state, send full payload (first save)
     if (!lastSavedResume) {
       const { data } = await apiClient.put(`/analysis/editor-data/${analysisId}/draft`, {
         mode: 'full',
         workingResume,
+        ...(statusesPayload && { suggestionStatuses: statusesPayload }),
       });
       return data;
     }
 
     // Compute diff — only send what changed
     const diff = computeDiff(lastSavedResume, workingResume);
-    if (!diff) return { success: true, message: 'No changes to save' };
+    if (!diff && !statusesPayload) return { success: true, message: 'No changes to save' };
 
-    const { data } = await apiClient.put(`/analysis/editor-data/${analysisId}/draft`, {
-      mode: 'patch',
-      baseHash: diff.baseHash,
-      ops: diff.ops,
-    });
+    const payload: Record<string, unknown> = diff
+      ? { mode: 'patch', baseHash: diff.baseHash, ops: diff.ops }
+      : { mode: 'full', workingResume };
+
+    if (statusesPayload) {
+      payload.suggestionStatuses = statusesPayload;
+    }
+
+    const { data } = await apiClient.put(`/analysis/editor-data/${analysisId}/draft`, payload);
     return data;
   },
 

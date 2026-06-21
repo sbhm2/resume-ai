@@ -9,23 +9,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardQuery } from '@/hooks/useDashboardQuery';
 import dayjs from 'dayjs';
 
-interface RecentAnalysis {
-  id: string;
-  resumeFileName: string;
-  atsScore: number;
-  jobDescription: string;
-  createdAt: string;
-}
-
-interface DashboardData {
-  totalAnalyses: number;
-  todayAnalyses: number;
-  dailyUsageCount: number;
-  dailyLimit: number;
-  averageAtsScore: number;
-  recentAnalyses: RecentAnalysis[];
-}
-
 export const DashboardPage = () => {
   const { data, isLoading } = useDashboardQuery();
 
