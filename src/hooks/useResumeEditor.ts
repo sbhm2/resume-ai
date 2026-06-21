@@ -1,7 +1,8 @@
-import { useReducer, useEffect, useCallback } from 'react';
+import { useReducer, useEffect } from 'react';
 import { EditorState, Suggestion, ResumeData } from '@/types/editor.types';
 import { toast } from 'sonner';
 import { editorService } from '@/services/editor.service';
+import { useAuth } from '@/providers/AuthProvider';
 
 type Action = 
   | { type: 'INIT'; payload: { resume: ResumeData; suggestions: Suggestion[] } }
@@ -25,7 +26,8 @@ type Action =
   | { type: 'ADD_SKILL'; payload: string }
   | { type: 'REMOVE_SKILL'; payload: string }
   | { type: 'ADD_EXPERIENCE' }
-  | { type: 'REMOVE_EXPERIENCE'; payload: string };
+  | { type: 'REMOVE_EXPERIENCE'; payload: string }
+  | { type: 'RESET' };
 
 const MAX_HISTORY = 20;
 
@@ -35,8 +37,21 @@ const saveHistory = (state: EditorState) => {
   return newPast;
 };
 
+const initialState: EditorState = {
+  originalResume: null as any,
+  workingResume: null as any,
+  suggestions: [],
+  activeSuggestionId: null,
+  showDiff: true,
+  isSaving: false,
+  lastSaved: null,
+  history: { past: [], future: [] }
+};
+
 const editorReducer = (state: EditorState, action: Action): EditorState => {
   switch (action.type) {
+    case 'RESET':
+      return initialState;
     case 'INIT':
       return {
         ...state,
@@ -201,25 +216,22 @@ const editorReducer = (state: EditorState, action: Action): EditorState => {
   }
 };
 
-const initialState: EditorState = {
-  originalResume: null as any,
-  workingResume: null as any,
-  suggestions: [],
-  activeSuggestionId: null,
-  showDiff: true,
-  isSaving: false,
-  lastSaved: null,
-  history: { past: [], future: [] }
-};
-
 export const useResumeEditor = (analysisId: string, initialData: { resume: ResumeData; suggestions: Suggestion[] } | null) => {
   const [state, dispatch] = useReducer(editorReducer, initialState);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (initialData) {
       dispatch({ type: 'INIT', payload: initialData });
     }
   }, [initialData]);
+
+  // Clear editor state on logout
+  useEffect(() => {
+    if (!isAuthenticated) {
+      dispatch({ type: 'RESET' });
+    }
+  }, [isAuthenticated]);
 
   // Keyboard Shortcuts
   useEffect(() => {

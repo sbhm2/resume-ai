@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { queryClient } from '@/lib/queryClient';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -23,7 +24,7 @@ apiClient.interceptors.response.use(
     // If 401 Unauthorized, force logout
     if (error.response?.status === 401) {
       localStorage.removeItem('resume_ai_token');
-      // window.location.href = '/login';
+      queryClient.clear();
       return Promise.reject(error);
     }
 

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { apiClient } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/providers/AuthProvider';
 import dayjs from 'dayjs';
 
 interface RecentAnalysis {
@@ -33,6 +34,7 @@ interface DashboardResponse {
 }
 
 export const DashboardPage = () => {
+  const { isAuthenticated } = useAuth();
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: async () => {
@@ -40,6 +42,7 @@ export const DashboardPage = () => {
       if (!data.success) throw new Error('Failed to fetch dashboard data');
       return data.data;
     },
+    enabled: isAuthenticated,
   });
 
   if (isLoading) {

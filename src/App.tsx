@@ -1,11 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { AppRoutes } from '@/routes';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { Toaster } from '@/components/ui/sonner';
-
-const queryClient = new QueryClient();
+import { queryClient } from '@/lib/queryClient';
 
 function App() {
   return (

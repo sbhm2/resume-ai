@@ -6,8 +6,10 @@ import { Signup } from '@/pages/auth/Signup';
 import { GuestRoute } from './GuestRoutes';
 import { ProtectedRoute } from './ProtectedRoute';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { GuestDashboardPage } from '@/pages/GuestDashboardPage';
 import { UnderConstruction } from '@/pages/UnderConstruction';
 import { ResumeEditorPage } from '@/pages/ResumeEditor';
+import { useAuth } from '@/providers/AuthProvider';
 
 const ResumeAnalyzer = lazy(() =>
   import('@/pages/ResumeAnalyzer').then((module) => ({ default: module.ResumeAnalyzer }))
@@ -26,7 +28,7 @@ export const AppRoutes = () => {
 
       {/* App shell: GuestDashboardLayout for guests, DashboardLayout for authenticated users */}
       <Route element={<AppLayout />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard" element={<DashboardRouter />} />
 
         {/* Authenticated-only routes */}
         <Route element={<ProtectedRoute />}>
@@ -42,4 +44,9 @@ export const AppRoutes = () => {
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
+};
+
+const DashboardRouter = () => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <DashboardPage /> : <GuestDashboardPage />;
 };
