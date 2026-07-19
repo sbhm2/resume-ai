@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { apiClient } from '@/services/api';
 import { FileText, Calendar, ChevronRight, Trash2, Loader2 } from 'lucide-react';
 import dayjs from 'dayjs';
 

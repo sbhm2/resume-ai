@@ -1,4 +1,4 @@
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const LoadingOverlay = () => (

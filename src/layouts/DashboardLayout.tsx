@@ -74,7 +74,7 @@ const DashboardHeader = () => {
           <div className="flex aspect-square size-7 items-center justify-center rounded-lg bg-indigo-600">
             <Sparkles className="size-3.5 text-white" />
           </div>
-          <span className="text-sm font-bold tracking-tight">Resume AI</span>
+          <span className="text-sm font-bold tracking-tight">NextOffer</span>
         </Link>
       ) : (
         <h2 className="text-lg font-semibold tracking-tight hidden sm:flex items-center">
@@ -146,7 +146,7 @@ export const DashboardLayout = () => {
                     <Sparkles className="size-4 text-white" />
                   </div>
                   <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-bold text-base tracking-tight">Resume AI</span>
+                    <span className="font-bold text-base tracking-tight">NextOffer</span>
                     <span className="text-xs text-muted-foreground">Pro Workspace</span>
                   </div>
                 </Link>
