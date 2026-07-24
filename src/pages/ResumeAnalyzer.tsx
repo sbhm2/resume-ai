@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Sparkles,
@@ -8,6 +8,7 @@ import {
   FileText,
   Lightbulb,
   PenLine,
+  Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,11 +19,13 @@ import { SuggestionsList } from '@/components/analyzer/SuggestionsList';
 import { BulletPointCard } from '@/components/analyzer/BulletPointCard';
 import { InterviewAccordion } from '@/components/analyzer/InterviewAccordion';
 import { CoverLetterCard } from '@/components/analyzer/CoverLetterCard';
-import { LoadingOverlay, ErrorState } from '@/components/analyzer/States';
+import { ErrorState } from '@/components/analyzer/States';
+import { ProcessingStepper, type Step } from '@/components/analyzer/ProcessingStepper';
 import { useAnalyzeResume } from '@/hooks/useAnalyzeResume';
 import { cn } from '@/lib/utils';
 
 const MIN_JD_LENGTH = 100;
+const MAX_JD_LENGTH = 3500;
 
 const getScoreStatus = (score: number) => {
   if (score >= 71) {
@@ -37,21 +40,94 @@ const getScoreStatus = (score: number) => {
 export const ResumeAnalyzer = () => {
   const [file, setFile] = useState<File | null>(null);
   const [jd, setJd] = useState('');
-  const { mutate, data, isPending, isError, error, reset } = useAnalyzeResume();
+  const { mutate, data, isPending, isError, error, hasJd, reset } = useAnalyzeResume();
+
+  const [stepperActive, setStepperActive] = useState(false);
+  const [stepperFastForward, setStepperFastForward] = useState(false);
 
   const analysis = data?.success ? data.data : null;
   const analysisId = data?.analysisId ?? data?.requestId ?? 'demo';
-  const canAnalyze = Boolean(file) && jd.trim().length >= MIN_JD_LENGTH;
+  const canAnalyze = Boolean(file);
+
+  // Define stepper steps dynamically based on hasJd
+  const stepperSteps: Step[] = [
+    {
+      id: 'upload',
+      label: '📄 Uploading Resume',
+      description: 'Uploading your resume securely...',
+    },
+    {
+      id: 'extract',
+      label: '📖 Extracting Resume Content',
+      description: 'Reading and understanding your resume.',
+    },
+    {
+      id: 'understand',
+      label: '🤖 AI is Understanding Your Resume',
+      description: 'Identifying your skills, projects, achievements and experience.',
+    },
+    {
+      id: 'match',
+      label: hasJd ? '🎯 Matching Against Job Description' : '📊 Evaluating Resume Using Industry Standards',
+      description: hasJd
+        ? 'Comparing your resume against the job requirements.'
+        : 'Assessing your resume against industry best practices.',
+    },
+    {
+      id: 'ats',
+      label: '🔍 Running ATS Analysis',
+      description: 'Calculating ATS compatibility and identifying gaps.',
+    },
+    {
+      id: 'suggestions',
+      label: '✨ Generating Personalized Suggestions',
+      description: 'Creating actionable improvements for your resume.',
+    },
+    {
+      id: 'coverLetter',
+      label: '📝 Writing Cover Letter',
+      description: 'Crafting a tailored cover letter.',
+      showIf: hasJd,
+    },
+    {
+      id: 'interview',
+      label: '🎤 Preparing Interview Questions',
+      description: 'Generating interview questions based on your profile.',
+    },
+    {
+      id: 'finalize',
+      label: '📦 Finalizing Results',
+      description: 'Preparing your personalized report.',
+    },
+  ];
 
   const handleAnalyze = () => {
-    if (!file || !canAnalyze) return;
+    if (!file) return;
+    setStepperActive(true);
+    setStepperFastForward(false);
     mutate({ file, jd: jd.trim() });
+  };
+
+  // When API responds, fast-forward the stepper
+  useEffect(() => {
+    if (stepperActive && !isPending && (data || isError)) {
+      // Small delay so the current step animation feels natural
+      const timer = setTimeout(() => setStepperFastForward(true), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [stepperActive, isPending, data, isError]);
+
+  const handleStepperComplete = () => {
+    setStepperActive(false);
+    setStepperFastForward(false);
   };
 
   const handleReset = () => {
     reset();
     setFile(null);
     setJd('');
+    setStepperActive(false);
+    setStepperFastForward(false);
   };
 
   const scoreStatus = analysis ? getScoreStatus(analysis.atsScore) : null;
@@ -72,7 +148,12 @@ export const ResumeAnalyzer = () => {
 
         <Card className="flex min-h-0 flex-col border-border/50 bg-card shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle className="text-base">2. Job Description</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base">2. Job Description</CardTitle>
+              <Badge variant="outline" className="rounded-full px-2 py-0 text-[10px] font-normal text-muted-foreground">
+                Optional
+              </Badge>
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -86,36 +167,58 @@ export const ResumeAnalyzer = () => {
           <CardContent className="flex min-h-0 flex-col gap-4">
             <textarea
               className={cn(
-                'min-h-[220px] max-h-[320px] w-full resize-y rounded-xl border bg-slate-50 p-4 text-sm',
+                'min-h-[180px] max-h-[280px] w-full resize-y rounded-xl border bg-slate-50 p-4 text-sm',
                 'focus:outline-none focus:ring-2 focus:ring-indigo-500/50 dark:bg-slate-900',
                 jd.length > 0 && jd.length < MIN_JD_LENGTH && 'border-amber-300 dark:border-amber-700'
               )}
-              placeholder="Paste the job description here..."
+              placeholder="Paste the job description here (optional, max 3500 characters)..."
               value={jd}
-              onChange={(e) => setJd(e.target.value)}
+              onChange={(e) => {
+                setJd(e.target.value.slice(0, MAX_JD_LENGTH));
+              }}
             />
-            <p
-              className={cn(
-                'text-xs',
-                jd.length < MIN_JD_LENGTH ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'
-              )}
-            >
-              {jd.length} / {MIN_JD_LENGTH} characters minimum
-            </p>
+            <div className="flex items-center justify-between">
+              <p
+                className={cn(
+                  'text-xs',
+                  jd.length === 0
+                    ? 'text-muted-foreground'
+                    : jd.length < MIN_JD_LENGTH
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : jd.length >= MAX_JD_LENGTH
+                        ? 'text-red-500 font-medium'
+                        : jd.length > MAX_JD_LENGTH - 500
+                          ? 'text-amber-500'
+                          : 'text-muted-foreground'
+                )}
+              >
+                {jd.length === 0
+                  ? `0 / ${MAX_JD_LENGTH} — Add a job description for ATS matching`
+                  : `${jd.length} / ${MAX_JD_LENGTH}${jd.length < MIN_JD_LENGTH ? ` — ${MIN_JD_LENGTH} chars minimum for targeted matching` : ''}`}
+              </p>
+            </div>
+
+            <div className="flex items-start gap-2 rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 dark:border-indigo-800/30 dark:bg-indigo-900/10">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-indigo-500" />
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium text-indigo-700 dark:text-indigo-300">No job description?</span>{' '}
+                We&apos;ll still analyze your resume using industry best practices.
+              </p>
+            </div>
 
             <Button
-              className="group h-12 w-full bg-indigo-600 text-base font-semibold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700"
+              className="group h-12 w-full bg-indigo-600 text-base font-semibold text-white shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 disabled:opacity-50"
               onClick={handleAnalyze}
-              disabled={!canAnalyze || isPending}
+              disabled={!canAnalyze || stepperActive}
             >
-              {isPending ? (
+              {stepperActive ? (
                 <span className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 animate-pulse" /> Analyzing...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5" />
-                  Analyze Resume
+                  {hasJd ? 'Analyze Resume' : 'Analyze Resume'}
                   <ArrowRight className="ml-1 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </span>
               )}
@@ -130,13 +233,27 @@ export const ResumeAnalyzer = () => {
 
       {/* RIGHT: Results */}
       <div className="flex min-h-0 min-w-0 flex-col gap-6 xl:col-span-8">
-        {isPending && <LoadingOverlay />}
-
-        {isError && !isPending && (
-          <ErrorState message={error.message} onRetry={reset} />
+        {/* Processing Stepper */}
+        {stepperActive && (
+          <ProcessingStepper
+            steps={stepperSteps}
+            isActive={stepperActive}
+            fastForward={stepperFastForward}
+            onComplete={handleStepperComplete}
+          />
         )}
 
-        {!isPending && !isError && !analysis && (
+        {/* Error State */}
+        {isError && !stepperActive && !isPending && (
+          <ErrorState message={error.message} onRetry={() => {
+            reset();
+            setFile(null);
+            setJd('');
+          }} />
+        )}
+
+        {/* Empty State */}
+        {!stepperActive && !isPending && !isError && !analysis && (
           <Card className="border-dashed border-border/60 bg-card/50 shadow-none">
             <CardContent className="flex flex-col items-center justify-center px-6 py-16 text-center">
               <div className="mb-4 rounded-full bg-indigo-50 p-4 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
@@ -144,14 +261,15 @@ export const ResumeAnalyzer = () => {
               </div>
               <h3 className="text-lg font-semibold">Ready to analyze</h3>
               <p className="mt-2 max-w-md text-sm text-muted-foreground">
-                Upload your resume and paste a job description to get ATS score, keyword gaps,
-                bullet rewrites, and a tailored cover letter.
+                Upload your resume to get ATS analysis, keyword gaps, bullet rewrites, and
+                personalized recommendations. Add a job description for targeted matching.
               </p>
             </CardContent>
           </Card>
         )}
 
-        {analysis && !isPending && (
+        {/* Results */}
+        {analysis && !stepperActive && (
           <>
             <Card className="border-border/50 bg-card shadow-sm">
               <CardContent className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between">
@@ -219,15 +337,15 @@ export const ResumeAnalyzer = () => {
                   </p>
                 </div>
                 <Button asChild className="shrink-0 bg-indigo-600 hover:bg-indigo-700 shadow-md">
-  <Link 
-    to={`/resume-editor/${analysisId}`}
-    state={{ analysisData: analysis }} // <-- Pass data through router state
-  >
-    <PenLine className="mr-2 h-4 w-4" />
-    Open Resume Editor
-    <ArrowRight className="ml-2 h-4 w-4" />
-  </Link>
-</Button>
+                  <Link
+                    to={`/resume-editor/${analysisId}`}
+                    state={{ analysisData: analysis }}
+                  >
+                    <PenLine className="mr-2 h-4 w-4" />
+                    Open Resume Editor
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
 
@@ -299,8 +417,8 @@ export const ResumeAnalyzer = () => {
                         <Lightbulb className="h-4 w-4" /> AI Summary
                       </h3>
                       <p className="relative z-10 text-sm leading-relaxed text-indigo-50">
-                        {analysis.resumeSuggestions[0] ??
-                          'Review the suggestions tab for tailored improvements to strengthen your resume for this role.'}
+                        {analysis.finalSummary || (analysis.resumeSuggestions[0] ??
+                          'Review the suggestions tab for tailored improvements to strengthen your resume.')}
                       </p>
                     </div>
                   </div>
@@ -348,18 +466,18 @@ export const ResumeAnalyzer = () => {
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={handleReset}>
-                Analyze New Job
+                Analyze New Resume
               </Button>
               <Button asChild className="shrink-0 bg-indigo-600 hover:bg-indigo-700 shadow-md">
-  <Link 
-    to={`/resume-editor/${analysisId}`}
-    state={{ analysisData: analysis }} // <-- Pass data through router state
-  >
-    <PenLine className="mr-2 h-4 w-4" />
-    Open Resume Editor
-    <ArrowRight className="ml-2 h-4 w-4" />
-  </Link>
-</Button>
+                <Link
+                  to={`/resume-editor/${analysisId}`}
+                  state={{ analysisData: analysis }}
+                >
+                  <PenLine className="mr-2 h-4 w-4" />
+                  Open Resume Editor
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </>
         )}
