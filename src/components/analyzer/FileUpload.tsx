@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { UploadCloud, FileText, X, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface FileUploadProps {
   file: File | null;
@@ -9,7 +10,6 @@ interface FileUploadProps {
 
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 const ALLOWED_TYPES = [
-  'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
 
@@ -18,16 +18,25 @@ export const FileUpload = ({ file, onFileChange }: FileUploadProps) => {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (selectedFile: File) => {
+  const checkFileType = (selectedFile: File): boolean => {
     setError(null);
+    if (selectedFile.type === 'application/pdf') {
+      toast.error('PDF uploads are temporarily unavailable. Please upload your resume in DOCX format.');
+      return false;
+    }
     if (!ALLOWED_TYPES.includes(selectedFile.type)) {
-      setError('Invalid file type. Please upload a PDF or DOCX.');
-      return;
+      setError('Invalid file type. Please upload a DOCX file.');
+      return false;
     }
     if (selectedFile.size > MAX_SIZE) {
       setError('File exceeds 2MB limit.');
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const handleFile = (selectedFile: File) => {
+    if (!checkFileType(selectedFile)) return;
     onFileChange(selectedFile);
   };
 
@@ -58,12 +67,12 @@ export const FileUpload = ({ file, onFileChange }: FileUploadProps) => {
             type="file"
             ref={fileInputRef}
             className="hidden"
-            accept=".pdf,.docx"
+            accept=".docx"
             onChange={(e) => e.target.files && handleFile(e.target.files[0])}
           />
           <UploadCloud className="w-10 h-10 text-muted-foreground mb-4" />
           <p className="text-sm font-medium">Drag and drop your resume</p>
-          <p className="text-xs text-muted-foreground mt-1">Supports PDF, DOCX up to 2MB</p>
+          <p className="text-xs text-muted-foreground mt-1">Upload DOCX Resume (Maximum 2MB)</p>
         </div>
       ) : (
         <div className="flex items-center justify-between p-4 bg-background border rounded-xl shadow-sm">

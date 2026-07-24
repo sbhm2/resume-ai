@@ -273,10 +273,17 @@ export const useResumeEditor = (analysisId: string, initialData: { resume: Resum
     const timeoutId = setTimeout(async () => {
       dispatch({ type: 'SET_SAVING', payload: true });
       try {
+        // Build suggestion statuses map: { suggestionId: status }
+        const suggestionStatuses: Record<string, string> = {};
+        state.suggestions.forEach(s => {
+          suggestionStatuses[s.id] = s.status;
+        });
+
         await editorService.saveDraft(
           analysisId,
           state.workingResume,
           lastSavedResumeRef.current,
+          suggestionStatuses,
         );
         // Update the baseline for future diffs — computeHash happens inside saveDraft
         lastSavedResumeRef.current = JSON.parse(JSON.stringify(state.workingResume));
@@ -288,7 +295,7 @@ export const useResumeEditor = (analysisId: string, initialData: { resume: Resum
       }
     }, 10000); // Save every 10 seconds of inactivity
     return () => clearTimeout(timeoutId);
-  }, [state.workingResume, analysisId]);
+  }, [state.workingResume, state.suggestions, analysisId]);
 
   return { state, dispatch };
 };

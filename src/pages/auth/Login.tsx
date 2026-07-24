@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Sparkles, Loader2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Eye, EyeOff, Sparkles, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,7 @@ import { useLogin } from '@/hooks/useAuthQueries';
 export const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { mutate: login, isPending } = useLogin();
+  const navigate = useNavigate();
   
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -21,7 +22,15 @@ export const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
-      <div className="w-full max-w-md bg-card border border-border shadow-lg rounded-2xl p-8">
+      <div className="w-full max-w-md bg-card border border-border shadow-lg rounded-2xl p-8 relative">
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors rounded-full p-1.5 hover:bg-muted"
+          aria-label="Close"
+        >
+          <X className="w-5 h-5" />
+        </button>
         <div className="flex justify-center mb-6">
           <div className="bg-indigo-100 dark:bg-indigo-900/50 p-3 rounded-xl text-indigo-600">
             <Sparkles className="w-8 h-8" />

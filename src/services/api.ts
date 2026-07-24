@@ -10,7 +10,7 @@ export const apiClient = axios.create({
 
 // Request Interceptor: Attach Token from localStorage
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('resume_ai_token');
+  const token = localStorage.getItem('nextoffer_token');
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -23,7 +23,7 @@ apiClient.interceptors.response.use(
   async (error) => {
     // If 401 Unauthorized, force logout
     if (error.response?.status === 401) {
-      localStorage.removeItem('resume_ai_token');
+      localStorage.removeItem('nextoffer_token');
       queryClient.clear();
       return Promise.reject(error);
     }

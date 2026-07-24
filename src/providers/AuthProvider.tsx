@@ -15,7 +15,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('resume_ai_token'));
+  const [token, setToken] = useState<string | null>(localStorage.getItem('nextoffer_token'));
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -36,14 +36,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const setAuth = (newUser: User, newToken: string) => {
     setUser(newUser);
     setToken(newToken);
-    console.log('resume token',{newToken, newUser})
-    localStorage.setItem('resume_ai_token', newToken);
+    console.log('nextoffer token',{newToken, newUser})
+    localStorage.setItem('nextoffer_token', newToken);
   };
 
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('resume_ai_token');
+    localStorage.removeItem('nextoffer_token');
     queryClient.clear();
   };
 

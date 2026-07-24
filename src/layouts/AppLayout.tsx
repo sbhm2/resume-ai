@@ -1,6 +1,7 @@
 import { useAuth } from '@/providers/AuthProvider';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { GuestDashboardLayout } from '@/layouts/GuestDashboardLayout';
+import { Footer } from '@/components/layout/Footer';
 import { Loader2 } from 'lucide-react';
 
 export const AppLayout = () => {
@@ -14,5 +15,12 @@ export const AppLayout = () => {
     );
   }
 
-  return isAuthenticated ? <DashboardLayout /> : <GuestDashboardLayout />;
+  return (
+    <div className="flex min-h-screen flex-col">
+      <div className="flex-1">
+        {isAuthenticated ? <DashboardLayout /> : <GuestDashboardLayout />}
+      </div>
+      <Footer />
+    </div>
+  );
 };

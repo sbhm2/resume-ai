@@ -26,7 +26,7 @@ export const PremiumBlur = ({ children }: { children: React.ReactNode }) => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Unlock Advanced Resume AI</DialogTitle>
+              <DialogTitle>Unlock NextOffer Premium</DialogTitle>
               <DialogDescription>
                 Create a free account to access detailed ATS scoring, missing keywords, and AI-powered bullet point rewriting.
               </DialogDescription>
